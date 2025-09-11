@@ -13,7 +13,7 @@ A public template for a Modular Microservices Hub with dynamic service loading. 
 ## 📁 Project Structure
 
 ```
-atlas/
+microservices/
 ├── src/                          # Gateway application
 │   ├── app.module.ts            # Main application module
 │   ├── app.controller.ts        # Root controller (/, /health)
@@ -45,8 +45,8 @@ atlas/
 
 ```bash
 # Clone the repository
-git clone <repository-url>
-cd atlas
+git clone git@github.com:louislemsic/microservices.git # or your actual repo link
+cd microservices
 
 # Install dependencies
 npm install
@@ -258,5 +258,3 @@ SERVICE_SPECIFIC_VAR=value
 **Testing Strategy**: Each service includes unit tests for both controllers and services using Vitest.
 
 ---
-
-**Atlas** - Your modular API hub for building scalable, maintainable microservices. 🌟
