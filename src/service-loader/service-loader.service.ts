@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
@@ -7,6 +7,7 @@ import * as dotenv from 'dotenv';
 export class ServiceLoaderService {
   private loadedServices: string[] = [];
   private serviceConfigs: Map<string, Record<string, string>> = new Map();
+  private readonly logger = new Logger(ServiceLoaderService.name);
 
   constructor() {
     this.loadRootConfig();
@@ -18,7 +19,7 @@ export class ServiceLoaderService {
     const rootEnvPath = path.join(process.cwd(), '.env');
     if (fs.existsSync(rootEnvPath)) {
       dotenv.config({ path: rootEnvPath });
-      console.log('📝 Loaded root environment configuration');
+      this.logger.log('📝 Loaded root environment configuration');
     }
   }
 
@@ -34,7 +35,7 @@ export class ServiceLoaderService {
       });
       
       this.serviceConfigs.set(serviceName, serviceConfig);
-      console.log(`📝 Loaded environment configuration for service: ${serviceName}`);
+      this.logger.log(`📝 Loaded environment configuration for service: ${serviceName}`);
     }
   }
 
@@ -42,7 +43,7 @@ export class ServiceLoaderService {
     const servicesPath = path.join(process.cwd(), 'services');
 
     if (!fs.existsSync(servicesPath)) {
-      console.log('No services directory found. Create services in ./services/ to get started.');
+      this.logger.warn('No services directory found. Create services in ./services/ to get started.');
       return;
     }
 
@@ -59,11 +60,10 @@ export class ServiceLoaderService {
     });
 
     if (serviceDirs.length === 0) {
-      console.log('No services found in ./services/ directory.');
+      this.logger.warn('No services found in ./services/ directory.');
     } else {
-      console.log(
-        `🔌 Discovered ${serviceDirs.length} service(s):`,
-        serviceDirs.map((s) => `/${s}/v1`),
+      this.logger.log(
+        `🔌 Discovered ${serviceDirs.length} service(s): ${serviceDirs.map((s) => `/${s}/v1`).join(', ')}`
       );
     }
   }
