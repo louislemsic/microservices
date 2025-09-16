@@ -1,260 +1,227 @@
-# Backend Microservices Template
-A public template for a Modular Microservices Hub with dynamic service loading. Built with TypeScript, Nest.js, and Vitest. Features plug-and-play service architecture and versioned API endpoints.
+# Atlas - Microservices Architecture
 
-## 🚀 Features
+A modular NestJS microservices architecture with independent services and a dynamic API gateway.
 
-- **Plug-and-Play Architecture**: Add new services simply by creating a folder in `/services`
-- **Automatic Service Discovery**: Gateway automatically discovers and mounts services at `/{service-slug}/v1`
-- **Modern Stack**: Built with Node.js ≥20, TypeScript, Nest.js, and Vitest
-- **Development Ready**: ESLint, Prettier, and hot reload configured
-- **Deployment Ready**: Dockerfile with Railway PORT support included
-- **Type Safe**: Full TypeScript support across all services
-
-## 📁 Project Structure
+## Architecture Overview
 
 ```
-microservices/
-├── src/                          # Gateway application
-│   ├── app.module.ts            # Main application module
-│   ├── app.controller.ts        # Root controller (/, /health)
-│   ├── app.service.ts           # Application service
-│   ├── main.ts                  # Application entry point
-│   └── service-loader/          # Dynamic service loading
-│       ├── service-loader.module.ts
-│       └── service-loader.service.ts
-├── services/                    # Modular services
-│   └── users/                   # Example users service
-│       ├── users.module.ts      # Service module
-│       ├── users.controller.ts  # Service controller
-│       ├── users.service.ts     # Service implementation
-│       ├── users.controller.spec.ts  # Controller tests
-│       └── users.service.spec.ts     # Service tests
-├── Dockerfile                   # Container deployment
-├── package.json                 # Dependencies and scripts
-└── README.md                    # This file
+/atlas
+├── gateway/              # API Gateway service
+├── services/            # Independent microservices
+│   ├── auth/           # Authentication service
+│   ├── posts/          # Posts service
+│   └── users/          # Users service
+└── shared/             # Shared library used by all services
 ```
 
-## 🛠️ Getting Started
+## Features
 
-### Prerequisites
+- 🚀 True microservice architecture with independent services
+- 🔄 Dynamic service discovery and management
+- 🌐 Centralized API Gateway with versioning support
+- 📚 Shared type definitions and constants
+- 🔍 Comprehensive logging with service identification
+- ⚡ Ready for Railway deployment
+- 🛠️ Automated service creation and management
+- 💻 Flexible development modes (monorepo or individual)
+- 🔨 Independent build and deployment capabilities
+- 📦 Service-specific dependency management
 
-- Node.js ≥20 (LTS recommended)
-- npm or yarn
+## Tech Stack
 
-### Installation
+[![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)](https://railway.app/)
+[![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![npm](https://img.shields.io/badge/npm-CB3837?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/)
+
+## Running Locally
+
+Get the Atlas microservices running on your local machine in three simple steps:
+
+> [!IMPORTANT]
+> This project assumes you have installed [Node.js](https://nodejs.org/en) and [Git](https://git-scm.com/) in your machine. Without these, the following instructions might not make sense.
+
+
+### Quick Start
+
+1. **Clone the repository**
+   ```bash
+   git clone git@github.com:louislemsic/atlas.git
+   cd atlas
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Install all service dependencies**
+   ```bash
+   npm run install:all
+   # Yes, this is a different command from npm install
+   ```
+
+4. **Start all services**
+   ```bash
+   npm run dev
+   ```
+
+This will:
+- Build the shared library
+- Install dependencies for gateway and all services
+- Start the gateway (Default Port: 3000) and all services
+- Display logs with service identification
+
+## Creating New Services
+
+Atlas includes an automated service creation script that generates all the necessary boilerplate:
+
+### Usage
 
 ```bash
-# Clone the repository
-git clone git@github.com:louislemsic/microservices.git # or your actual repo link
-cd microservices
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run start:dev
+npm run create-service [service-name] [port]
 ```
 
-The gateway will start on `http://localhost:3000` and automatically discover services.
-
-### Available Endpoints
-
-- **`GET /`** - Atlas information and available services
-- **`GET /health`** - Health check endpoint
-- **`GET /users/v1`** - Example users service (auto-discovered)
-
-## 🔌 Adding New Services
-
-Atlas automatically discovers and mounts any service placed in the `/services` directory. Each service should follow this structure:
-
-### 1. Create Service Directory
-
+**Example:**
 ```bash
-mkdir services/your-service
+npm run create-service products 8004
 ```
 
-### 2. Create Service Files
+### What the script creates:
 
-**`services/your-service/your-service.module.ts`**
+- ✅ Complete NestJS service structure
+- ✅ Controller with CRUD endpoints
+- ✅ Service class with business logic
+- ✅ Module configuration
+- ✅ Dockerfile for containerization
+- ✅ Railway deployment configuration
+- ✅ Updates shared library constants
+- ✅ Configures proper routing
+
+### Generated structure:
+```
+services/products/
+├── src/
+│   ├── products.controller.ts    # API endpoints
+│   ├── products.service.ts       # Business logic
+│   ├── products.module.ts        # Module configuration
+│   └── main.ts                   # Application bootstrap
+├── Dockerfile                    # Container configuration
+├── package.json                  # Dependencies
+├── tsconfig.json                 # TypeScript config
+├── nest-cli.json                 # NestJS CLI config
+└── railway.json                  # Railway deployment config
+```
+
+### Default endpoints created:
+- `GET /products/v1` - List all products
+- `GET /products/v1/health` - Health check
+- `GET /products/v1/:id` - Get specific product
+- `POST /products/v1` - Create new product
+
+After creating a service, just run `npm run dev` to start all services including your new one!
+
+## Design
+
+Atlas is architected around a **dynamic gateway** that operates as a living service registry. Rather than static configuration, services self-register and self-discover, creating a truly plug-and-play microservices ecosystem.
+
+### Dynamic Service Discovery
+
+At the heart of Atlas lies the **Registry Service** - a sophisticated service discovery mechanism that enables:
+
+**🔌 Plug-and-Play Architecture**
+- Services automatically register themselves on startup
+- No manual gateway configuration required
+- New services are instantly discoverable and routable
+
+**💓 Health Monitoring & Self-Healing**
+- Continuous health checks with configurable heartbeat intervals
+- Automatic deregistration of unhealthy services
+- Real-time service status monitoring
+
+**🎯 Zero-Configuration Routing**
+- Services declare their own routes and versions
+- Gateway dynamically builds routing tables
+- Intelligent request forwarding based on service availability
+
+### Service Registration Flow
+
 ```typescript
-import { Module } from '@nestjs/common';
-import { YourServiceController } from './your-service.controller';
-import { YourServiceService } from './your-service.service';
+// Each service automatically registers itself
+const registration = {
+  name: 'users',
+  port: 8002,
+  version: 'v1',
+  healthEndpoint: '/users/v1/health',
+  metadata: { description: 'User management service' }
+};
 
-@Module({
-  controllers: [YourServiceController],
-  providers: [YourServiceService],
-  exports: [YourServiceService],
-})
-export class YourServiceModule {}
+// POST to gateway/registry/register
+await gateway.register(registration);
 ```
 
-**`services/your-service/your-service.controller.ts`**
-```typescript
-import { Controller, Get } from '@nestjs/common';
-import { YourServiceService } from './your-service.service';
+**What makes this profound:**
 
-@Controller('your-service/v1')
-export class YourServiceController {
-  constructor(private readonly yourService: YourServiceService) {}
+1. **Services are autonomous** - They know who they are, what they do, and how to connect
+2. **Gateway is reactive** - It adapts to the services that exist, not the other way around  
+3. **Zero downtime deployments** - Services can register/deregister without affecting others
+4. **Infinite scalability** - Add new services by simply starting them, no configuration changes needed
 
-  @Get()
-  findAll() {
-    return this.yourService.findAll();
-  }
-}
-```
+This design transforms traditional microservices from static, pre-configured networks into **living, breathing ecosystems** that grow and adapt organically. Each service carries its own identity and automatically integrates into the larger system - making Atlas truly greater than the sum of its parts.
 
-**`services/your-service/your-service.service.ts`**
-```typescript
-import { Injectable } from '@nestjs/common';
 
-@Injectable()
-export class YourServiceService {
-  findAll() {
-    return { message: 'Hello from your service!' };
-  }
-}
-```
+## Docker Deployment
 
-### 3. Register Service (Manual)
+Atlas services are containerized and ready for deployment.
 
-Currently, services need to be manually imported in `src/service-loader/service-loader.module.ts`:
+### Building Individual Services
 
-```typescript
-import { YourServiceModule } from '../../services/your-service/your-service.module';
-
-@Module({})
-export class ServiceLoaderModule {
-  static forRoot(): DynamicModule {
-    const imports = [UsersModule, YourServiceModule]; // Add your module here
-    // ...
-  }
-}
-```
-
-### 4. Restart Development Server
-
-The service will be automatically available at `/your-service/v1`!
-
-## 🧪 Testing
-
-Atlas uses Vitest for testing (Jest has been completely removed).
+Each service has its own Dockerfile for independent deployment:
 
 ```bash
-# Run all tests
-npm test
+# Build gateway
+docker build -f gateway/Dockerfile -t atlas-gateway .
+docker run -p 3000:3000 atlas-gateway
 
-# Run tests in watch mode
-npm run test:watch
+# Build auth service
+docker build -f services/auth/Dockerfile -t atlas-auth .
+docker run -p 8003:8003 atlas-auth
 
-# Run tests with coverage
-npm run test:coverage
+# Build posts service
+docker build -f services/posts/Dockerfile -t atlas-posts .
+docker run -p 8001:8001 atlas-posts
+
+# Build users service
+docker build -f services/users/Dockerfile -t atlas-users .
+docker run -p 8002:8002 atlas-users
 ```
 
-Each service should include:
-- `*.service.spec.ts` - Service unit tests
-- `*.controller.spec.ts` - Controller unit tests
+### Docker Compose (Coming Soon)
 
-## 🎨 Code Quality
-
-### Linting
-```bash
-npm run lint        # Check and fix linting issues
-```
-
-### Formatting
-```bash
-npm run format      # Format code with Prettier
-```
-
-## 🚢 Deployment
-
-### Local Production Build
-```bash
-npm run build       # Build the application
-npm run start:prod  # Start production server
-```
-
-### Docker Deployment
-```bash
-# Build image
-docker build -t atlas .
-
-# Run container
-docker run -p 3000:3000 atlas
-```
+For local development with Docker, a docker-compose.yml will orchestrate all services together.
 
 ### Railway Deployment
-The application is configured to work with Railway out of the box:
-- PORT environment variable support
-- Health check endpoint at `/health`
-- Production-ready Dockerfile
 
-## 🔧 Configuration
+Atlas is optimized for Railway with smart deployments:
 
-### Environment Variables
+1. **Automatic Service Detection**: New services are automatically configured for deployment
+2. **Smart Deployments**: Only changed services are redeployed  
+3. **Independent Scaling**: Each service can be scaled independently
+4. **Environment Management**: Service-specific environment variables
 
-Atlas supports a flexible environment configuration system with both root-level and service-specific variables:
+**Setup Railway:**
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
 
-#### Root Configuration
-Place your core environment variables in the root `.env` file:
-```env
-PORT=3000
-NODE_ENV=development
-DATABASE_URL=postgresql://localhost:5432/atlas
-# ... other core variables
+# Login and link services
+railway login
+cd gateway && railway link
+cd ../services/auth && railway link
+# Repeat for each service
 ```
 
-#### Service-Specific Configuration
-Each service can have its own `.env` file in its directory (`services/your-service/.env`):
-```env
-# Override root variables or add service-specific ones
-DATABASE_URL=postgresql://localhost:5432/your_service_db
-SERVICE_SPECIFIC_VAR=value
-```
-
-#### Configuration Priority
-1. Service-specific variables override root variables
-2. Root `.env` provides default values
-3. Environment variables take precedence over file configurations
-
-#### Core Variables
-- `PORT` - Server port (default: 3000, Railway compatible)
-- `NODE_ENV` - Environment (development/production)
-
-### TypeScript Configuration
-
-- Modern ES2022 target
-- Decorator support enabled
-- Strict type checking configured
-- Path aliases for clean imports
-
-### ESLint & Prettier
-
-- TypeScript-first configuration
-- Automatic code formatting
-- Import organization
-- Consistent code style
-
-## 🤝 Contributing
-
-1. Create a new service in `/services`
-2. Follow the established patterns
-3. Add comprehensive tests
-4. Ensure linting passes
-5. Update documentation
-
-## 📝 Architecture Notes
-
-**Service Discovery**: Atlas uses a simple but effective service loader that scans the `/services` directory and automatically imports/mounts service modules.
-
-**Routing Convention**: All services are mounted at `/{service-name}/v1` to provide consistent versioning.
-
-**Modular Design**: Each service is completely self-contained with its own module, controller, service, and tests.
-
-**Type Safety**: Full TypeScript support ensures type safety across service boundaries.
-
-**Testing Strategy**: Each service includes unit tests for both controllers and services using Vitest.
-
----
+Each service deploys independently with its own logs, metrics, and scaling configuration.

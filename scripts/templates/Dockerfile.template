@@ -1,0 +1,31 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY tsconfig*.json ./
+
+# Copy shared library
+COPY shared/ ./shared/
+
+# Copy service source
+COPY services/{{service}}/ ./services/{{service}}/
+
+# Install dependencies
+RUN npm ci
+
+# Build shared library
+RUN cd shared && npm run build
+
+# Build service
+RUN cd services/{{service}} && npm run build
+
+# Default service port (can be overridden)
+ENV {{SERVICE_NAME}}_SERVICE_PORT={{port}}
+
+# Expose the service port
+EXPOSE {{port}}
+
+# Start the service
+CMD ["node", "services/{{service}}/dist/main.js"]

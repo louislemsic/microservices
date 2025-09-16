@@ -1,12 +1,38 @@
-node_modules
-npm-debug.log
+# Dependencies
+**/node_modules
+**/dist
+
+# Environment and secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# Development files
 .git
 .gitignore
-README.md
-.env
-.nyc_output
-coverage
 .vscode
 .idea
+.DS_Store
+
+# Logs and debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+**/logs
+**/*.log
+
+# Test coverage
+.nyc_output
+**/coverage
+
+# Documentation
 *.md
 !README.md
+
+# Keep necessary files
+!shared/
+!scripts/
+!gateway/
+!services/
+!package*.json
+!tsconfig*.json
