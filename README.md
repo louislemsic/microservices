@@ -6,11 +6,10 @@ A modular NestJS microservices architecture with independent services and a dyna
 
 ```
 /atlas
-├── gateway/              # API Gateway service
-├── services/            # Independent microservices
+├── services/           # All microservices (including gateway)
+│   ├── gateway/        # API Gateway service
 │   ├── auth/           # Authentication service
-│   ├── posts/          # Posts service
-│   └── users/          # Users service
+│   └── user/           # User management service
 └── shared/             # Shared library used by all services
 ```
 
@@ -19,13 +18,25 @@ A modular NestJS microservices architecture with independent services and a dyna
 - 🚀 True microservice architecture with independent services
 - 🔄 Dynamic service discovery and management
 - 🌐 Centralized API Gateway with versioning support
-- 📚 Shared type definitions and constants
+- 📚 Shared library (`@atlas/shared`) with types, enums, and utilities
 - 🔍 Comprehensive logging with service identification
 - ⚡ Ready for Railway deployment
 - 🛠️ Automated service creation and management
-- 💻 Flexible development modes (monorepo or individual)
+- 💻 Unified development environment with smart orchestration
 - 🔨 Independent build and deployment capabilities
-- 📦 Service-specific dependency management
+- 📦 Service-specific dependency management with shared library linking
+- 🧪 Vitest testing configuration for each service
+
+## Shared Library (`@atlas/shared`)
+
+Atlas includes a comprehensive shared library that provides:
+
+- **Type Definitions**: Common interfaces and types used across services
+- **Service Enums**: Centralized service names and API versions
+- **Registry Types**: Service registration and health check interfaces
+- **Utilities**: Common helper functions and utilities
+
+All services automatically link to the shared library via `file:../../shared` dependency, ensuring type safety and consistency across the entire microservices ecosystem.
 
 ## Tech Stack
 
@@ -33,7 +44,6 @@ A modular NestJS microservices architecture with independent services and a dyna
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-[![Railway](https://img.shields.io/badge/Railway-0B0D0E?style=for-the-badge&logo=railway&logoColor=white)](https://railway.app/)
 [![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![npm](https://img.shields.io/badge/npm-CB3837?style=for-the-badge&logo=npm&logoColor=white)](https://www.npmjs.com/)
 
@@ -49,8 +59,8 @@ Get the Atlas microservices running on your local machine in three simple steps:
 
 1. **Clone the repository**
    ```bash
-   git clone git@github.com:louislemsic/atlas.git
-   cd atlas
+   git clone git@github.com:ED3N-Ventures/konek-atlas.git
+   cd konek-atlas
    ```
 
 2. **Install dependencies**
@@ -71,8 +81,10 @@ Get the Atlas microservices running on your local machine in three simple steps:
 
 This will:
 - Build the shared library
-- Install dependencies for gateway and all services
-- Start the gateway (Default Port: 3000) and all services
+- Install dependencies for all services (including gateway)
+- Start the gateway first (Default Port: 3000)
+- Wait for gateway to be ready
+- Start all other services with proper delays
 - Display logs with service identification
 
 ## Creating New Services
@@ -87,33 +99,35 @@ npm run create-service [service-name] [port]
 
 **Example:**
 ```bash
-npm run create-service products 8004
+npm run create-service awesome-service 8069
 ```
 
 ### What the script creates:
 
 - ✅ Complete NestJS service structure
-- ✅ Controller with CRUD endpoints
+- ✅ Controller with CRUD endpoints using `@atlas/shared` types
 - ✅ Service class with business logic
-- ✅ Module configuration
-- ✅ Dockerfile for containerization
+- ✅ Module configuration with ConfigModule
+- ✅ Vitest testing configuration
 - ✅ Railway deployment configuration
-- ✅ Updates shared library constants
-- ✅ Configures proper routing
+- ✅ Updates shared library Services enum
+- ✅ Configures proper routing and service registration
+- ✅ Environment files (.env and .env.example)
 
 ### Generated structure:
 ```
 services/products/
 ├── src/
-│   ├── products.controller.ts    # API endpoints
+│   ├── products.controller.ts    # API endpoints with @atlas/shared types
 │   ├── products.service.ts       # Business logic
 │   ├── products.module.ts        # Module configuration
-│   └── main.ts                   # Application bootstrap
-├── Dockerfile                    # Container configuration
-├── package.json                  # Dependencies
+│   ├── products.vitest.config.ts # Testing configuration
+│   └── main.ts                   # Application bootstrap with auto-registration
+├── package.json                  # Dependencies with @atlas/shared
 ├── tsconfig.json                 # TypeScript config
 ├── nest-cli.json                 # NestJS CLI config
-└── railway.json                  # Railway deployment config
+├── .env                          # Environment variables
+└── .env.example                  # Environment template
 ```
 
 ### Default endpoints created:
@@ -123,6 +137,11 @@ services/products/
 - `POST /products/v1` - Create new product
 
 After creating a service, just run `npm run dev` to start all services including your new one!
+
+**Note:** The script automatically:
+- Installs dependencies for all services to ensure `@atlas/shared` is properly linked
+- Builds the shared library with the new service enum
+- Starts the gateway first, then all other services
 
 ## Design
 
@@ -175,53 +194,35 @@ This design transforms traditional microservices from static, pre-configured net
 
 ## Docker Deployment
 
-Atlas services are containerized and ready for deployment.
+Atlas uses a centralized Docker approach with docker-compose for orchestration.
 
-### Building Individual Services
-
-Each service has its own Dockerfile for independent deployment:
+### Building and Running with Docker
 
 ```bash
-# Build gateway
-docker build -f gateway/Dockerfile -t atlas-gateway .
-docker run -p 3000:3000 atlas-gateway
+# Build and start all services
+docker-compose up --build
 
-# Build auth service
-docker build -f services/auth/Dockerfile -t atlas-auth .
-docker run -p 8003:8003 atlas-auth
+# Run in detached mode
+docker-compose up -d
 
-# Build posts service
-docker build -f services/posts/Dockerfile -t atlas-posts .
-docker run -p 8001:8001 atlas-posts
+# View logs
+docker-compose logs -f
 
-# Build users service
-docker build -f services/users/Dockerfile -t atlas-users .
-docker run -p 8002:8002 atlas-users
+# Stop all services
+docker-compose down
 ```
 
-### Docker Compose (Coming Soon)
+### Individual Service Development
 
-For local development with Docker, a docker-compose.yml will orchestrate all services together.
+For development, use the npm scripts which handle dependency management and service orchestration:
 
-### Railway Deployment
-
-Atlas is optimized for Railway with smart deployments:
-
-1. **Automatic Service Detection**: New services are automatically configured for deployment
-2. **Smart Deployments**: Only changed services are redeployed  
-3. **Independent Scaling**: Each service can be scaled independently
-4. **Environment Management**: Service-specific environment variables
-
-**Setup Railway:**
 ```bash
-# Install Railway CLI
-npm install -g @railway/cli
+# Start all services in development mode
+npm run dev
 
-# Login and link services
-railway login
-cd gateway && railway link
-cd ../services/auth && railway link
-# Repeat for each service
+# Start individual service (from service directory)
+cd services/gateway && npm run start:dev
+cd services/auth && npm run start:dev
 ```
 
 Each service deploys independently with its own logs, metrics, and scaling configuration.

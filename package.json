@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "install:all": "npm install && npm install --prefix shared && npm run build --prefix shared && npm install --prefix gateway && for dir in services/*/; do npm install --prefix \"$dir\"; done",
+    "install:all": "npm install && npm install --prefix shared && npm run build --prefix shared && for dir in services/*/; do npm install --prefix \"$dir\"; done",
     "start": "ts-node scripts/run-services.ts start:prod",
     "dev": "ts-node scripts/run-services.ts start:dev",
     "build": "ts-node scripts/run-services.ts build",

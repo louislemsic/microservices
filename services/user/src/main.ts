@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { UsersModule } from './users.module';
+import { UserModule } from './user.module';
 import axios from 'axios';
 import * as packageJson from '../package.json';
 
@@ -17,26 +17,28 @@ function getServiceName(packageName: string): string {
 }
 
 async function bootstrap() {
-  const logger = new Logger('UsersService');
-  const app = await NestFactory.create(UsersModule);
-
+  const logger = new Logger('UserService');
+  const app = await NestFactory.create(UserModule);
+  
   const configService = app.get(ConfigService);
+  const isDev = configService.get('NODE_ENV') === 'development';
+
+  const host = isDev ? 'localhost' : 'gateway';
   const port = configService.get<number>('PORT', 8002);
   
   // Extract service info from package.json
   const serviceName = getServiceName(packageJson.name);
   const apiVersion = getApiVersion(packageJson.version);
-  const serviceVersion = packageJson.version;
+  const serviceVersion = packageJson.version;  
   
-  const registryUrl = configService.get<string>('REGISTRY_URL', 'http://localhost:3001');
+  // Registry URL
+  const registryUrl = `http://${host}:${configService.get<string>('REGISTRY_PORT', "3001")}`;
   const regKey = configService.get<string>('REG_KEY');
-
-  logger.log(`Users service config - NAME: ${serviceName}, VERSION: ${serviceVersion} (API: ${apiVersion}), PORT: ${port}, REG_KEY: ${regKey ? `${regKey.slice(0, 8)}...${regKey.slice(-4)}` : 'undefined'}`);
 
   app.setGlobalPrefix(serviceName);
 
   await app.listen(port);
-  logger.log(`🚀 Users service is running on: http://localhost:${port}/${serviceName}/${apiVersion}`);
+  logger.log(`🚀 User service is running on: http://${host}:${port}/${serviceName}/${apiVersion}`);
 
   // Register with gateway
   try {
@@ -76,8 +78,8 @@ async function bootstrap() {
       healthEndpoint: `/${serviceName}/${apiVersion}/health`,
       timestamp: new Date(),
       metadata: {
-        description: packageJson.description || 'Users service for user management',
-        tags: ['atlas', 'microservice', serviceName, 'identity'],
+        description: packageJson.description || 'User service',
+        tags: ['atlas', 'microservice', serviceName],
         packageName: packageJson.name,
       },
     };
