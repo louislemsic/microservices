@@ -21,20 +21,24 @@ async function bootstrap() {
   const app = await NestFactory.create({{ServiceName}}Module);
   
   const configService = app.get(ConfigService);
+  const isDev = configService.get('NODE_ENV') === 'development';
+
+  const host = isDev ? 'localhost' : 'gateway';
   const port = configService.get<number>('PORT', {{SERVICE_PORT}});
   
   // Extract service info from package.json
   const serviceName = getServiceName(packageJson.name);
   const apiVersion = getApiVersion(packageJson.version);
-  const serviceVersion = packageJson.version;
+  const serviceVersion = packageJson.version;  
   
-  const registryUrl = configService.get<string>('REGISTRY_URL', 'http://localhost:3001');
+  // Registry URL
+  const registryUrl = `http://${host}:${configService.get<string>('REGISTRY_PORT', "3001")}`;
   const regKey = configService.get<string>('REG_KEY');
 
   app.setGlobalPrefix(serviceName);
 
   await app.listen(port);
-  logger.log(`🚀 {{ServiceName}} service is running on: http://localhost:${port}/${serviceName}/${apiVersion}`);
+  logger.log(`🚀 {{ServiceName}} service is running on: http://${host}:${port}/${serviceName}/${apiVersion}`);
 
   // Register with gateway
   try {

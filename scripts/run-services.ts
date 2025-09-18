@@ -5,7 +5,7 @@ import * as http from 'http';
 
 const ROOT_DIR = resolve(__dirname, '..');
 const SERVICES_DIR = join(ROOT_DIR, 'services');
-const GATEWAY_DIR = join(ROOT_DIR, 'gateway');
+const GATEWAY_DIR = join(SERVICES_DIR, 'gateway');
 const SHARED_DIR = join(ROOT_DIR, 'shared');
 
 /**
@@ -21,6 +21,11 @@ async function startDevelopmentEnvironment() {
   await runSharedBuild();
   console.log('✅ Shared library built!\n');
 
+  // 0.5. Install dependencies for all services to ensure @atlas/shared is properly linked
+  console.log('📦 Installing dependencies for all services...');
+  await installServiceDependencies();
+  console.log('✅ All service dependencies installed!\n');
+
   const processes: any[] = [];
 
   // 1. Start Gateway first
@@ -33,19 +38,21 @@ async function startDevelopmentEnvironment() {
   await waitForGateway();
   console.log('✅ Gateway is ready!\n');
 
-  // 3. Auto-discover services in /services folder
+  // 3. Auto-discover services in /services folder (excluding gateway since it's already started)
   const serviceNames = discoverServices();
-  console.log(`📂 Found ${serviceNames.length} services: ${serviceNames.join(', ')}\n`);
+  const otherServices = serviceNames.filter(name => name !== 'gateway');
+  console.log(`📂 Found ${serviceNames.length} services: ${serviceNames.join(', ')}`);
+  console.log(`🔧 Starting ${otherServices.length} additional services: ${otherServices.join(', ')}\n`);
 
-  // 4. Start each service
-  for (const serviceName of serviceNames) {
+  // 4. Start each service (excluding gateway)
+  for (const serviceName of otherServices) {
     console.log(`🔧 Starting ${serviceName} service...`);
     const servicePath = join(SERVICES_DIR, serviceName);
     const serviceProcess = startService(serviceName, servicePath);
     processes.push(serviceProcess);
     
     // Small delay to avoid registration race conditions
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 700));
   }
 
   console.log('\n🎉 All services started! Press Ctrl+C to stop all services.\n');
@@ -148,6 +155,19 @@ async function waitForGateway(maxRetries = 30, retryInterval = 1000): Promise<vo
 
 async function runSharedBuild(): Promise<void> {
   return runCommand('npm', ['run', 'build'], SHARED_DIR);
+}
+
+async function installServiceDependencies(): Promise<void> {
+  const serviceNames = discoverServices();
+  
+  // Install dependencies for all services in parallel
+  const installPromises = serviceNames.map(serviceName => {
+    const servicePath = join(SERVICES_DIR, serviceName);
+    console.log(`📦 Installing dependencies for ${serviceName}...`);
+    return runCommand('npm', ['install'], servicePath);
+  });
+  
+  await Promise.all(installPromises);
 }
 
 async function runCommand(command: string, args: string[], cwd: string): Promise<void> {
