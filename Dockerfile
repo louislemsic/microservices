@@ -1,0 +1,68 @@
+FROM node:23-alpine AS builder
+
+# Install NestJS CLI globally
+RUN npm install -g @nestjs/cli
+
+# Build arguments for dynamic service and port
+ARG SERVICE_NAME=auth
+ARG SERVICE_PORT=8003
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY tsconfig*.json ./
+
+# Copy shared library
+COPY shared/ ./shared/
+
+# Copy specified service source
+COPY services/${SERVICE_NAME}/ ./services/${SERVICE_NAME}/
+
+# Install root and shared dependencies first
+RUN npm install && npm cache clean --force && \
+    cd shared && \
+    npm install && npm cache clean --force && \
+    npm run build
+
+# Install service dependencies first (without shared lib), then reinstall after shared is built
+RUN cd services/${SERVICE_NAME} && \
+    npm install && npm cache clean --force && \
+    npm install @atlas/shared@file:../../shared && \
+    npm run build
+
+FROM node:23-alpine AS runner
+
+# Build arguments for dynamic service and port
+ARG SERVICE_NAME=auth
+ARG SERVICE_PORT=8003
+
+WORKDIR /app
+
+# Copy package files for production dependencies
+COPY package*.json ./
+COPY shared/package*.json ./shared/
+COPY services/${SERVICE_NAME}/package*.json ./services/${SERVICE_NAME}/
+
+# Install only production dependencies
+RUN npm ci --only=production && npm cache clean --force && \
+    cd shared && npm ci --only=production && npm cache clean --force
+
+# Copy built artifacts from builder stage
+COPY --from=builder /app/shared ./shared
+COPY --from=builder /app/services/${SERVICE_NAME}/dist ./services/${SERVICE_NAME}/dist
+
+# Install service production dependencies (to link shared library)
+RUN cd services/${SERVICE_NAME} && \
+    npm ci --only=production && \
+    npm cache clean --force && \
+    npm install @atlas/shared@file:../../shared
+
+# Expose the dynamic service port
+EXPOSE ${SERVICE_PORT}
+
+# Set environment variable for service name
+ENV SERVICE_NAME=${SERVICE_NAME}
+
+# Start the service
+CMD ["sh", "-c", "node ./services/$SERVICE_NAME/dist/src/main.js"]

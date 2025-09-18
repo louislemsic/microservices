@@ -1,0 +1,163 @@
+version: '3.8'
+
+services:
+  # Infrastructure services - start first
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - konek-atlas-network
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: atlas
+      POSTGRES_USER: konek
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U konek -d atlas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - konek-atlas-network
+
+  # Gateway service - starts after infrastructure
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: gateway
+        SERVICE_PORT: 3000
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    environment:
+      - DOCKER_ENV=true
+    env_file:
+      - ./services/gateway/.env
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=5", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - konek-atlas-network
+
+  # Microservices - start after gateway
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: auth
+        SERVICE_PORT: 8001
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./services/auth/.env
+    depends_on:
+      gateway:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - konek-atlas-network
+
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: user
+        SERVICE_PORT: 8002
+    ports:
+      - "8002:8002"
+    env_file:
+      - ./services/user/.env
+    depends_on:
+      gateway:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - konek-atlas-network
+
+  raffle-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: raffle
+        SERVICE_PORT: 8003
+    ports:
+      - "8003:8003"
+    env_file:
+      - ./services/raffle/.env
+    depends_on:
+      gateway:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - konek-atlas-network
+
+  task-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: task
+        SERVICE_PORT: 8004
+    ports:
+      - "8004:8004"
+    env_file:
+      - ./services/task/.env
+    depends_on:
+      gateway:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - konek-atlas-network
+
+  wallet-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        SERVICE_NAME: wallet
+        SERVICE_PORT: 8005
+    ports:
+      - "8005:8005"
+    env_file:
+      - ./services/wallet/.env
+    depends_on:
+      gateway:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - konek-atlas-network
+
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+
+networks:
+  konek-atlas-network:
