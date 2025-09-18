@@ -64,7 +64,7 @@ function createServiceFiles(serviceName: string, port: number) {
   mkdirSync(srcDir, { recursive: true });
   
   // Get REG_KEY from gateway .env file if it exists
-  const gatewayEnvPath = join(ROOT_DIR, 'gateway/.env');
+  const gatewayEnvPath = join(ROOT_DIR, 'services/gateway/.env');
   let regKey = 'your_registry_key_here'; // Default for .env.example
   let actualRegKey = 'your_registry_key_here'; // Default for .env
   
@@ -91,7 +91,6 @@ function createServiceFiles(serviceName: string, port: number) {
     'tsconfig.json': readFileSync(join(TEMPLATES_DIR, 'tsconfig.template.json'), 'utf-8'),
     'nest-cli.json': readFileSync(join(TEMPLATES_DIR, 'nest-cli.template.json'), 'utf-8'),
     'vitest.config.ts': readFileSync(join(TEMPLATES_DIR, 'vitest.config.template.ts'), 'utf-8'),
-    'Dockerfile': readFileSync(join(TEMPLATES_DIR, 'Dockerfile.template'), 'utf-8'),
     '.env': readFileSync(join(TEMPLATES_DIR, 'env.template'), 'utf-8'),
     '.env.example': readFileSync(join(TEMPLATES_DIR, 'env.template'), 'utf-8'),
   };
@@ -109,11 +108,13 @@ function createServiceFiles(serviceName: string, port: number) {
       .replace(/{{SERVICE_PORT}}/g, port.toString())
       .replace(/{{REG_KEY}}/g, regKeyValue);
       
-    const targetPath = ['package.json', 'tsconfig.json', 'nest-cli.json', 'Dockerfile', '.env', '.env.example'].includes(filename)
+    const targetPath = ['package.json', 'tsconfig.json', 'nest-cli.json', '.env', '.env.example'].includes(filename)
       ? join(serviceDir, filename)
       : filename === 'main.ts'
         ? join(srcDir, 'main.ts')
-        : join(srcDir, `${serviceName}.${filename}`);
+        : filename === 'vitest.config.ts'
+          ? join(srcDir, `${serviceName}.vitest.config.ts`)
+          : join(srcDir, `${serviceName}.${filename}`);
       
     writeFileSync(targetPath, processedContent);
   });

@@ -1,57 +1,23 @@
-import { Controller, Post, Body, Get, Param, Delete, Logger } from '@nestjs/common';
-import { AuthService } from './auth.service';
+import { Controller, Get, Post, Body, Param, Logger } from '@nestjs/common';
+import { UserService } from './user.service';
 import { ApiVersions } from '@atlas/shared';
 
 @Controller(ApiVersions.V1)
-export class AuthController {
-  private readonly logger = new Logger(AuthController.name);
+export class UserController {
+  private readonly logger = new Logger(UserController.name);
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly userService: UserService) {}
 
-  @Post('keys')
-  async generateKey(@Body() body: { clientId: string; allowedServices?: string[] }) {
-    const key = await this.authService.generateApiKey(body.clientId, body.allowedServices);
-
-    return {
-      data: { key },
-      meta: {
-        timestamp: new Date(),
-        path: '/auth/v1/keys',
-      },
-    };
-  }
-
-  @Post('keys/validate')
-  async validateKey(@Body() body: { key: string; service?: string }) {
-    const isValid = await this.authService.validateApiKey(body.key, body.service);
-
-    return {
-      data: { isValid },
-      meta: {
-        timestamp: new Date(),
-        path: '/auth/v1/keys/validate',
-      },
-    };
-  }
-
-  @Delete('keys/:key')
-  async deactivateKey(@Param('key') key: string) {
-    await this.authService.deactivateApiKey(key);
-
-    return {
-      data: { message: 'API key deactivated' },
-      meta: {
-        timestamp: new Date(),
-        path: `/auth/v1/keys/${key}`,
-      },
-    };
+  @Get()
+  findAll() {
+    return this.userService.findAll();
   }
 
   @Get('health')
   health() {
     return {
       status: 'ok',
-      service: 'auth',
+      service: 'user',
       timestamp: new Date().toISOString(),
       uptime: this.formatUptime(process.uptime() * 1000),
       version: 'v1',
@@ -87,5 +53,15 @@ export class AuthController {
       return remainingSeconds > 0 ? `${minutes}m ${remainingSeconds}s` : `${minutes}m`;
     }
     return `${seconds}s`;
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.userService.findOne(id);
+  }
+
+  @Post()
+  create(@Body() data: any) {
+    return this.userService.create(data);
   }
 }

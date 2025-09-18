@@ -19,16 +19,20 @@ function getServiceName(packageName: string): string {
 async function bootstrap() {
   const logger = new Logger('AuthService');
   const app = await NestFactory.create(AuthModule);
-
+  
   const configService = app.get(ConfigService);
+  const isDev = configService.get('NODE_ENV') === 'development';
+
+  const host = isDev ? 'localhost' : 'gateway';
   const port = configService.get<number>('PORT', 8003);
   
   // Extract service info from package.json
   const serviceName = getServiceName(packageJson.name);
   const apiVersion = getApiVersion(packageJson.version);
-  const serviceVersion = packageJson.version;
+  const serviceVersion = packageJson.version;  
   
-  const registryUrl = configService.get<string>('REGISTRY_URL', 'http://localhost:3001');
+  // Registry URL
+  const registryUrl = `http://${host}:${configService.get<string>('REGISTRY_PORT', "3001")}`;
   const regKey = configService.get<string>('REG_KEY');
 
   logger.log(`Auth service config - NAME: ${serviceName}, VERSION: ${serviceVersion} (API: ${apiVersion}), PORT: ${port}, REG_KEY: ${regKey ? `${regKey.slice(0, 8)}...${regKey.slice(-4)}` : 'undefined'}`);
@@ -36,7 +40,7 @@ async function bootstrap() {
   app.setGlobalPrefix(serviceName);
 
   await app.listen(port);
-  logger.log(`🚀 Auth service is running on: http://localhost:${port}/${serviceName}/${apiVersion}`);
+  logger.log(`🚀 Auth service is running on: http://${host}:${port}/${serviceName}/${apiVersion}`);
 
   // Register with gateway
   try {

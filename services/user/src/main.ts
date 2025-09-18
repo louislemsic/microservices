@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { {{ServiceName}}Module } from './{{service}}.module';
+import { UserModule } from './user.module';
 import axios from 'axios';
 import * as packageJson from '../package.json';
 
@@ -17,14 +17,14 @@ function getServiceName(packageName: string): string {
 }
 
 async function bootstrap() {
-  const logger = new Logger('{{ServiceName}}Service');
-  const app = await NestFactory.create({{ServiceName}}Module);
+  const logger = new Logger('UserService');
+  const app = await NestFactory.create(UserModule);
   
   const configService = app.get(ConfigService);
   const isDev = configService.get('NODE_ENV') === 'development';
 
   const host = isDev ? 'localhost' : 'gateway';
-  const port = configService.get<number>('PORT', {{SERVICE_PORT}});
+  const port = configService.get<number>('PORT', 8002);
   
   // Extract service info from package.json
   const serviceName = getServiceName(packageJson.name);
@@ -38,7 +38,7 @@ async function bootstrap() {
   app.setGlobalPrefix(serviceName);
 
   await app.listen(port);
-  logger.log(`🚀 {{ServiceName}} service is running on: http://${host}:${port}/${serviceName}/${apiVersion}`);
+  logger.log(`🚀 User service is running on: http://${host}:${port}/${serviceName}/${apiVersion}`);
 
   // Register with gateway
   try {
@@ -78,7 +78,7 @@ async function bootstrap() {
       healthEndpoint: `/${serviceName}/${apiVersion}/health`,
       timestamp: new Date(),
       metadata: {
-        description: packageJson.description || '{{ServiceName}} service',
+        description: packageJson.description || 'User service',
         tags: ['atlas', 'microservice', serviceName],
         packageName: packageJson.name,
       },

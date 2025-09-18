@@ -1,0 +1,29 @@
+{
+  "name": "@atlas/gateway",
+  "version": "1.0.0",
+  "description": "API Gateway for Atlas Microservices",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "nest build",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main.js",
+    "lint": "eslint \"{src,test}/**/*.ts\" --fix",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@atlas/shared": "file:../../shared",
+    "@nestjs/axios": "^4.0.0",
+    "@nestjs/common": "^11.1.6",
+    "@nestjs/config": "^4.0.0",
+    "@nestjs/core": "^11.1.6",
+    "@nestjs/platform-express": "^11.1.6",
+    "@nestjs/terminus": "^11.0.0",
+    "@nestjs/throttler": "^6.4.0",
+    "dotenv": "^16.6.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2"
+  }
+}
