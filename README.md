@@ -99,7 +99,7 @@ npm run create-service [service-name] [port]
 
 **Example:**
 ```bash
-npm run create-service awesome-service 8069
+npm run create-service products 8069
 ```
 
 ### What the script creates:
