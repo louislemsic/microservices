@@ -4,6 +4,7 @@ import { execSync } from 'child_process';
 
 const TEMPLATES_DIR = join(__dirname, 'templates');
 const ROOT_DIR = resolve(__dirname, '..');
+const GATEWAY_DIR = join(ROOT_DIR, 'services/gateway');
 
 /**
  * Converts a hyphenated service name to PascalCase
@@ -106,6 +107,7 @@ function createServiceFiles(serviceName: string, port: number) {
       .replace(/{{ServiceName}}/g, toPascalCase(serviceName))
       .replace(/{{SERVICE_NAME}}/g, serviceName.toUpperCase())
       .replace(/{{SERVICE_PORT}}/g, port.toString())
+      .replace(/{{SERVICE_HOSTNAME}}/g, 'localhost')
       .replace(/{{REG_KEY}}/g, regKeyValue);
       
     const targetPath = ['package.json', 'tsconfig.json', 'nest-cli.json', '.env', '.env.example'].includes(filename)
@@ -188,9 +190,12 @@ function main() {
 
     console.log('✅ Service created successfully!');
     console.log(`\nTo start working with your new service:
-1. npm install
-2. npm run build
-3. npm start
+1. cd services/${serviceName}
+2. npm start
+
+Your service includes:
+- AtlasBridge for inter-service communication
+- All required dependencies (crypto, dotenv, @aws-sdk/client-secrets-manager, @nestjs/axios)
 
 Your service will be available at:
 http://localhost:3000/${serviceName}/v1 (via gateway)
