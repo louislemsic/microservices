@@ -14,7 +14,8 @@
     "test:services": "ts-node scripts/run-services.ts test",
     "format": "prettier --write \"**/*.ts\"",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "create-service": "ts-node scripts/create-service.ts"
+    "create-service": "ts-node scripts/create-service.ts",
+    "env": "ts-node scripts/setup-env.ts"
   },
   "devDependencies": {
     "@types/express": "^5.0.3",
