@@ -3,7 +3,20 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name);
-  private readonly items: any[] = [];
+  private readonly items: any[] = [
+    {
+      id: '1',
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      createdAt: new Date()
+    },
+    {
+      id: '2',
+      name: 'Jane Doe',
+      email: 'jane.doe@example.com',
+      createdAt: new Date()
+    }
+  ];
 
   findAll() {
     return {
