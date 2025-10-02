@@ -21,10 +21,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AuthModule);
   
   const configService = app.get(ConfigService);
-  const isDev = configService.get('NODE_ENV') === 'development';
 
-  const host = isDev ? 'localhost' : 'gateway';
-  const port = configService.get<number>('PORT', 8003);
+  const host = configService.get<string>('HOST', 'localhost');
+  const port = configService.get<number>('PORT', 8001);
   
   // Extract service info from package.json
   const serviceName = getServiceName(packageJson.name);
@@ -32,15 +31,15 @@ async function bootstrap() {
   const serviceVersion = packageJson.version;  
   
   // Registry URL
-  const registryUrl = `http://${host}:${configService.get<string>('REGISTRY_PORT', "3001")}`;
-  const regKey = configService.get<string>('REG_KEY');
-
-  logger.log(`Auth service config - NAME: ${serviceName}, VERSION: ${serviceVersion} (API: ${apiVersion}), PORT: ${port}, REG_KEY: ${regKey ? `${regKey.slice(0, 8)}...${regKey.slice(-4)}` : 'undefined'}`);
+  const registryUrl = `http://${configService.get<string>('GATEWAY_HOST', 'localhost')}:${configService.get<string>('REGISTRY_PORT', "3001")}`;
+  const regKey = configService.get<string>('REGISTRY_KEY');
 
   app.setGlobalPrefix(serviceName);
 
   await app.listen(port);
   logger.log(`🚀 Auth service is running on: http://${host}:${port}/${serviceName}/${apiVersion}`);
+
+  logger.log(`🔄 Attempting to register to gateway at ${registryUrl} with key ${regKey ? `${regKey.slice(0, 8)}...${regKey.slice(-4)}` : 'undefined'}`);
 
   // Register with gateway
   try {
@@ -69,11 +68,12 @@ async function bootstrap() {
 
   async function registerWithGateway() {
     if (!regKey) {
-      throw new Error('REG_KEY environment variable is required for service registration');
+      throw new Error('REGISTRY_KEY environment variable is required for service registration');
     }
 
     const registration = {
       name: serviceName,
+      host: host,
       port: port,
       version: apiVersion,
       semanticVersion: serviceVersion,

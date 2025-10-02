@@ -4,6 +4,7 @@ import { execSync } from 'child_process';
 
 const TEMPLATES_DIR = join(__dirname, 'templates');
 const ROOT_DIR = resolve(__dirname, '..');
+const GATEWAY_DIR = join(ROOT_DIR, 'services/gateway');
 
 /**
  * Converts a hyphenated service name to PascalCase
@@ -63,21 +64,21 @@ function createServiceFiles(serviceName: string, port: number) {
   // Create directories
   mkdirSync(srcDir, { recursive: true });
   
-  // Get REG_KEY from gateway .env file if it exists
+  // Get REGISTRY_KEY from gateway .env file if it exists
   const gatewayEnvPath = join(ROOT_DIR, 'services/gateway/.env');
-  let regKey = 'your_registry_key_here'; // Default for .env.example
-  let actualRegKey = 'your_registry_key_here'; // Default for .env
+  let regKey = 'insert_reg_key_here'; // Default for .env.example
+  let actualRegKey = 'insert_reg_key_here'; // Default for .env
   
   if (existsSync(gatewayEnvPath)) {
     try {
       const gatewayEnvContent = readFileSync(gatewayEnvPath, 'utf-8');
-      const regKeyMatch = gatewayEnvContent.match(/REG_KEY=(.+)/);
+      const regKeyMatch = gatewayEnvContent.match(/REGISTRY_KEY=(.+)/);
       if (regKeyMatch && regKeyMatch[1]) {
         actualRegKey = regKeyMatch[1].trim();
-        console.log(`📋 Copying REG_KEY from gateway .env file`);
+        console.log(`📋 Copying REGISTRY_KEY from gateway .env file`);
       }
     } catch (error) {
-      console.warn('⚠️  Could not read gateway .env file, using default REG_KEY');
+      console.warn('⚠️  Could not read gateway .env file, using default REGISTRY_KEY');
     }
   }
 
@@ -97,7 +98,7 @@ function createServiceFiles(serviceName: string, port: number) {
   
   // Replace placeholders and write files
   Object.entries(templates).forEach(([filename, content]) => {
-    // Use different REG_KEY values for .env vs .env.example
+    // Use different REGISTRY_KEY values for .env vs .env.example
     const regKeyValue = filename === '.env' ? actualRegKey : regKey;
     
     let processedContent = content
@@ -106,7 +107,8 @@ function createServiceFiles(serviceName: string, port: number) {
       .replace(/{{ServiceName}}/g, toPascalCase(serviceName))
       .replace(/{{SERVICE_NAME}}/g, serviceName.toUpperCase())
       .replace(/{{SERVICE_PORT}}/g, port.toString())
-      .replace(/{{REG_KEY}}/g, regKeyValue);
+      .replace(/{{SERVICE_HOSTNAME}}/g, 'localhost')
+      .replace(/{{REGISTRY_KEY}}/g, regKeyValue);
       
     const targetPath = ['package.json', 'tsconfig.json', 'nest-cli.json', '.env', '.env.example'].includes(filename)
       ? join(serviceDir, filename)
@@ -188,9 +190,12 @@ function main() {
 
     console.log('✅ Service created successfully!');
     console.log(`\nTo start working with your new service:
-1. npm install
-2. npm run build
-3. npm start
+1. cd services/${serviceName}
+2. npm start
+
+Your service includes:
+- AtlasBridge for inter-service communication
+- All required dependencies (crypto, dotenv, @aws-sdk/client-secrets-manager, @nestjs/axios)
 
 Your service will be available at:
 http://localhost:3000/${serviceName}/v1 (via gateway)

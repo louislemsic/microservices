@@ -1,6 +1,6 @@
 # Atlas - Microservices Architecture
 
-A modular NestJS microservices architecture with independent services and a dynamic API gateway.
+A modular NestJS microservices architecture with independent services and a dynamic API gateway. This repository showcases the monorepo version, however, you may deploy each service separately to their own repository.
 
 ## Architecture Overview
 
@@ -54,38 +54,47 @@ Get the Atlas microservices running on your local machine in three simple steps:
 > [!IMPORTANT]
 > This project assumes you have installed [Node.js](https://nodejs.org/en) and [Git](https://git-scm.com/) in your machine. Without these, the following instructions might not make sense.
 
-
-### Quick Start
-
-1. **Clone the repository**
-   ```bash
-   git clone git@github.com:ED3N-Ventures/konek-atlas.git
-   cd konek-atlas
-   ```
-
-2. **Install dependencies**
+1. **After cloning the repository, install the dependencies**
    ```bash
    npm install
    ```
 
-3. **Install all service dependencies**
+2. **Initialize all .env across all services**   
    ```bash
-   npm run install:all
-   # Yes, this is a different command from npm install
+   npm run env
    ```
 
-4. **Start all services**
+> [!WARNING]  
+> Before running the command below, this project assumes you have installed the Nest.js CLI globally. If not, install it by running the following command. Learn more about Nest.js [here.](https://nestjs.com/)
+> ```bash
+> npm install -g @nestjs/cli
+> ```
+
+3. **Start all services**
    ```bash
    npm run dev
    ```
 
+> [!NOTE]  
+> You may also have the option to indicate specific services only by adding them as args in the command. Make sure to separate them with a single 'space'.
+> ```bash
+> npm run start user   # User Service will only run (along with gateway)
+> ```
+
 This will:
-- Build the shared library
 - Install dependencies for all services (including gateway)
+- Build all projects
 - Start the gateway first (Default Port: 3000)
 - Wait for gateway to be ready
 - Start all other services with proper delays
 - Display logs with service identification
+
+## Testing Endpoints
+Including in this repository is a Postman collection JSON file that you can import easily. As of this writing, its filename is 
+
+```
+atlas.postman_collection.json
+```
 
 ## Creating New Services
 
@@ -109,7 +118,6 @@ npm run create-service products 8069
 - ✅ Service class with business logic
 - ✅ Module configuration with ConfigModule
 - ✅ Vitest testing configuration
-- ✅ Railway deployment configuration
 - ✅ Updates shared library Services enum
 - ✅ Configures proper routing and service registration
 - ✅ Environment files (.env and .env.example)
@@ -172,6 +180,7 @@ At the heart of Atlas lies the **Registry Service** - a sophisticated service di
 // Each service automatically registers itself
 const registration = {
   name: 'users',
+  host: 'user-service',
   port: 8002,
   version: 'v1',
   healthEndpoint: '/users/v1/health',
@@ -190,7 +199,6 @@ await gateway.register(registration);
 4. **Infinite scalability** - Add new services by simply starting them, no configuration changes needed
 
 This design transforms traditional microservices from static, pre-configured networks into **living, breathing ecosystems** that grow and adapt organically. Each service carries its own identity and automatically integrates into the larger system - making Atlas truly greater than the sum of its parts.
-
 
 ## Docker Deployment
 
@@ -211,18 +219,3 @@ docker-compose logs -f
 # Stop all services
 docker-compose down
 ```
-
-### Individual Service Development
-
-For development, use the npm scripts which handle dependency management and service orchestration:
-
-```bash
-# Start all services in development mode
-npm run dev
-
-# Start individual service (from service directory)
-cd services/gateway && npm run start:dev
-cd services/auth && npm run start:dev
-```
-
-Each service deploys independently with its own logs, metrics, and scaling configuration.

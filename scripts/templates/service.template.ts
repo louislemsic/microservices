@@ -1,9 +1,20 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+import { ApiVersions, AtlasBridge, Services } from '@atlas/shared';
 
 @Injectable()
 export class {{ServiceName}}Service {
   private readonly logger = new Logger({{ServiceName}}Service.name);
   private readonly items: any[] = [];
+  private readonly bridge: AtlasBridge;
+
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly configService: ConfigService,
+  ) {
+    this.bridge = new AtlasBridge(this.httpService, this.configService);
+  }
 
   findAll() {
     return {

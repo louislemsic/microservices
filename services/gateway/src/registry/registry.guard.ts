@@ -29,10 +29,10 @@ export class RegistryGuard implements CanActivate {
 
     // Check registry key authentication
     const regKey = request.headers['x-registry-key'] as string;
-    const validKey = this.configService.get<string>('REG_KEY');
+    const validKey = this.configService.get<string>('REGISTRY_KEY');
 
     if (!validKey) {
-      this.logger.error('REG_KEY not configured in environment variables');
+      this.logger.error('REGISTRY_KEY not configured in environment variables');
       throw new UnauthorizedException('Registry authentication not configured');
     }
 

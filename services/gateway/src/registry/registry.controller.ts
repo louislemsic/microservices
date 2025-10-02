@@ -24,6 +24,7 @@ export class RegistryController {
       message: `Service ${registration.name} registered successfully`,
       data: {
         name: registration.name,
+        host: registration.host,
         port: registration.port,
         version: registration.version,
         registeredAt: new Date().toISOString(),

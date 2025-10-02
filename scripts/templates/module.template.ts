@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
 import { {{ServiceName}}Controller } from './{{service}}.controller';
 import { {{ServiceName}}Service } from './{{service}}.service';
 
@@ -8,6 +9,7 @@ import { {{ServiceName}}Service } from './{{service}}.service';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    HttpModule,
   ],
   controllers: [{{ServiceName}}Controller],
   providers: [{{ServiceName}}Service],

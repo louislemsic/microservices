@@ -2,7 +2,7 @@
   "name": "@atlas/gateway",
   "version": "1.0.0",
   "description": "API Gateway for Atlas Microservices",
-  "main": "dist/main.js",
+  "main": "dist/src/main.js",
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\"",

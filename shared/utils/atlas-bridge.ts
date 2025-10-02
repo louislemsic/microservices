@@ -14,7 +14,9 @@ export class AtlasBridge {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
   ) {
-    this.gatewayUrl = this.configService.get<string>('GATEWAY_URL', 'http://localhost:3000');
+    const host = this.configService.get<string>('GATEWAY_HOST', 'localhost');
+    const port = this.configService.get<number>('GATEWAY_PORT', 3000);
+    this.gatewayUrl = `http://${host}:${port}`;
   }
 
   /**
