@@ -21,9 +21,8 @@ async function bootstrap() {
   const app = await NestFactory.create(UserModule);
   
   const configService = app.get(ConfigService);
-  const isDev = configService.get('NODE_ENV') === 'development';
 
-  const host = isDev ? 'localhost' : 'gateway';
+  const host = configService.get<string>('HOST', 'localhost');
   const port = configService.get<number>('PORT', 8002);
   
   // Extract service info from package.json
@@ -33,7 +32,7 @@ async function bootstrap() {
   
   // Registry URL
   const registryUrl = `http://${host}:${configService.get<string>('REGISTRY_PORT', "3001")}`;
-  const regKey = configService.get<string>('REG_KEY');
+  const regKey = configService.get<string>('REGISTRY_KEY');
 
   app.setGlobalPrefix(serviceName);
 
@@ -67,11 +66,12 @@ async function bootstrap() {
 
   async function registerWithGateway() {
     if (!regKey) {
-      throw new Error('REG_KEY environment variable is required for service registration');
+      throw new Error('REGISTRY_KEY environment variable is required for service registration');
     }
 
     const registration = {
       name: serviceName,
+      host: host,
       port: port,
       version: apiVersion,
       semanticVersion: serviceVersion,

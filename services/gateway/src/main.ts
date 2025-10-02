@@ -11,11 +11,9 @@ async function bootstrap() {
   const publicApp = await NestFactory.create(GatewayModule);
   const configService = publicApp.get(ConfigService);
 
-  const publicPort = configService.get<number>('GATEWAY_PORT', 3000);
+  const host = configService.get<string>('HOST', 'localhost');
+  const publicPort = configService.get<number>('PORT', 3000);
   const registryPort = configService.get<number>('REGISTRY_PORT', 3001);
-  const regKey = configService.get<string>('REG_KEY');
-
-  logger.log(`Gateway config - PUBLIC_PORT: ${publicPort}, REGISTRY_PORT: ${registryPort}, REG_KEY: ${regKey ? `${regKey.slice(0, 8)}...${regKey.slice(-4)}` : 'undefined'}`);
 
   // Create the registry app (port 3001) - REGISTRY ROUTES ONLY
   const registryApp = await NestFactory.create(RegistryModule);
@@ -28,11 +26,11 @@ async function bootstrap() {
 
   // Start public gateway (3000)
   await publicApp.listen(publicPort);
-  logger.log(`🚀 Gateway (Public) is running on: http://localhost:${publicPort}`);
+  logger.log(`🚀 Gateway (Public) is running on: http://${host}:${publicPort}`);
 
   // Start registry service (3001)
   await registryApp.listen(registryPort);
-  logger.log(`🔧 Registry Service is running on: http://localhost:${registryPort}`);
+  logger.log(`🔧 Registry Service is running on: http://${host}:${registryPort}`);
 
   // Graceful shutdown
   const shutdown = async (signal: string) => {

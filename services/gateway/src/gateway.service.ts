@@ -24,8 +24,6 @@ export class GatewayService {
   }
 
   async routeRequest(method: string, serviceName: string, version: string, path: string, body?: any) {
-    const isDev = this.configService.get('NODE_ENV') === 'development';
-    
     this.logger.log(`Routing request to ${serviceName} at ${version}/${path}`);
 
     // Get service from dynamic registry
@@ -36,7 +34,7 @@ export class GatewayService {
       throw new NotFoundException(`Service ${serviceName} is not registered or unavailable`);
     }
 
-    const serviceUrl = `http://${isDev ? 'localhost' : `${service.name}-service`}:${service.port}/${serviceName}/${version}/${path}`;
+    const serviceUrl = `http://${service.host}:${service.port}/${serviceName}/${version}/${path}`;
     this.logger.debug(`Routing ${method} request to: ${serviceUrl}`);
 
     try {

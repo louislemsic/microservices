@@ -24,7 +24,7 @@ async function bootstrap() {
   
   const configService = app.get(ConfigService);
 
-  const host = configService.get<String>('HOSTNAME', '{{SERVICE_HOSTNAME}}');
+  const host = configService.get<String>('HOST', '{{SERVICE_HOSTNAME}}');
   const port = configService.get<number>('PORT', {{SERVICE_PORT}});
   
   // Extract service info from package.json
@@ -33,13 +33,15 @@ async function bootstrap() {
   const serviceVersion = packageJson.version;  
   
   // Registry URL
-  const registryUrl = `http://${configService.get<String>('GATEWAY_HOSTNAME', 'localhost')}:${configService.get<number>('REGISTRY_PORT', 3001)}`;
-  const regKey = configService.get<string>('REG_KEY');
+  const registryUrl = `http://${configService.get<String>('GATEWAY_HOST', 'localhost')}:${configService.get<number>('REGISTRY_PORT', 3001)}`;
+  const regKey = configService.get<string>('REGISTRY_KEY');
 
   app.setGlobalPrefix(serviceName);
 
   await app.listen(port);
   logger.log(`🚀 {{ServiceName}} service is running on: http://${host}:${port}/${serviceName}/${apiVersion}`);
+
+  logger.log(`🔄 Attempting to register to gateway at ${registryUrl} with key ${regKey ? `${regKey.slice(0, 8)}...${regKey.slice(-4)}` : 'undefined'}`);
 
   // Register with gateway
   try {
@@ -68,7 +70,7 @@ async function bootstrap() {
 
   async function registerWithGatewayWithRetry() {
     if (!regKey) {
-      throw new Error('REG_KEY environment variable is required for service registration');
+      throw new Error('REGISTRY_KEY environment variable is required for service registration');
     }
 
     const registration = {
