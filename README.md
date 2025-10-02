@@ -89,6 +89,12 @@ This will:
 - Start all other services with proper delays
 - Display logs with service identification
 
+## Testing Endpoints
+Including in this repository is a Postman collection JSON file that you can import easily. As of this writing, its filename is 
+
+```
+atlas.postman_collection.json
+```
 
 ## Creating New Services
 
