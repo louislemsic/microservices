@@ -65,7 +65,7 @@ function createServiceFiles(serviceName: string, port: number) {
   mkdirSync(srcDir, { recursive: true });
   
   // Get REGISTRY_KEY from gateway .env file if it exists
-  const gatewayEnvPath = join(ROOT_DIR, 'services/gateway/.env');
+  const gatewayEnvPath = join(GATEWAY_DIR, '.env');
   let regKey = 'insert_reg_key_here'; // Default for .env.example
   let actualRegKey = 'insert_reg_key_here'; // Default for .env
   
@@ -90,10 +90,13 @@ function createServiceFiles(serviceName: string, port: number) {
     'main.ts': readFileSync(join(TEMPLATES_DIR, 'main.template.ts'), 'utf-8'),
     'package.json': readFileSync(join(TEMPLATES_DIR, 'package.template.json'), 'utf-8'),
     'tsconfig.json': readFileSync(join(TEMPLATES_DIR, 'tsconfig.template.json'), 'utf-8'),
+    'tsconfig.build.json': readFileSync(join(TEMPLATES_DIR, 'tsconfig.build.template.json'), 'utf-8'),
     'nest-cli.json': readFileSync(join(TEMPLATES_DIR, 'nest-cli.template.json'), 'utf-8'),
     'vitest.config.ts': readFileSync(join(TEMPLATES_DIR, 'vitest.config.template.ts'), 'utf-8'),
     '.env': readFileSync(join(TEMPLATES_DIR, 'env.template'), 'utf-8'),
     '.env.example': readFileSync(join(TEMPLATES_DIR, 'env.template'), 'utf-8'),
+    '.dockerignore': readFileSync(join(TEMPLATES_DIR, 'dockerignore.template'), 'utf-8'),
+    'Dockerfile': readFileSync(join(TEMPLATES_DIR, 'dockerfile.template'), 'utf-8'),
   };
   
   // Replace placeholders and write files
@@ -110,13 +113,11 @@ function createServiceFiles(serviceName: string, port: number) {
       .replace(/{{SERVICE_HOSTNAME}}/g, 'localhost')
       .replace(/{{REGISTRY_KEY}}/g, regKeyValue);
       
-    const targetPath = ['package.json', 'tsconfig.json', 'nest-cli.json', '.env', '.env.example'].includes(filename)
+    const targetPath = ['package.json', 'tsconfig.json', 'tsconfig.build.json', 'nest-cli.json', '.env', '.env.example', '.dockerignore', 'Dockerfile', 'vitest.config.ts'].includes(filename)
       ? join(serviceDir, filename)
       : filename === 'main.ts'
         ? join(srcDir, 'main.ts')
-        : filename === 'vitest.config.ts'
-          ? join(srcDir, `${serviceName}.vitest.config.ts`)
-          : join(srcDir, `${serviceName}.${filename}`);
+        : join(srcDir, `${serviceName}.${filename}`);
       
     writeFileSync(targetPath, processedContent);
   });
