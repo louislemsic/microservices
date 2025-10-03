@@ -18,7 +18,7 @@ export class RegistryService {
   }
 
   async registerService(registration: ServiceRegistration): Promise<void> {
-    this.logger.log(`Registering service: ${registration.name} using ${registration.host}:${registration.port}`);
+    this.logger.log(`Registering new service with name "${registration.name}" and address "${registration.host}:${registration.port}"`);
 
     // Validate service health before registering
     try {
@@ -109,6 +109,8 @@ export class RegistryService {
     // In Docker environment, use service name instead of localhost
     const healthUrl = `http://${service.host}:${service.port}${service.healthEndpoint}`;
 
+    this.logger.debug(`Validating health of service "${service.name}" at ${healthUrl}`);
+    
     try {
       const response = await firstValueFrom(
         this.httpService.get(healthUrl, {
