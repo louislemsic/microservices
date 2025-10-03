@@ -1,5 +1,6 @@
 export interface ServiceRegistration {
   name: string;
+  host: string;
   port: number;
   version: string; // API version (e.g., "v1", "v2")
   semanticVersion?: string; // Semantic version from package.json (e.g., "1.0.0")
