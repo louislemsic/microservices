@@ -129,13 +129,18 @@ services/products/
 │   ├── products.controller.ts    # API endpoints with @atlas/shared types
 │   ├── products.service.ts       # Business logic
 │   ├── products.module.ts        # Module configuration
-│   ├── products.vitest.config.ts # Testing configuration
 │   └── main.ts                   # Application bootstrap with auto-registration
+│
+├── .env                          # Environment variables
+├── .env.example                  # Environment template
+│
+├── Dockerfile                    # Dockerfile (with .dockerignore)
+│
 ├── package.json                  # Dependencies with @atlas/shared
 ├── tsconfig.json                 # TypeScript config
 ├── nest-cli.json                 # NestJS CLI config
-├── .env                          # Environment variables
-└── .env.example                  # Environment template
+│
+└── vitest.config.ts              # Testing configuration
 ```
 
 ### Default endpoints created:

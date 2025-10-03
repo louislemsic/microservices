@@ -3,15 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "install:all": "npm install && npm install --prefix shared && npm run build --prefix shared && for dir in services/*/; do npm install --prefix \"$dir\"; done",
     "start": "ts-node scripts/run-services.ts start:prod",
     "dev": "ts-node scripts/run-services.ts start:dev",
     "build": "ts-node scripts/run-services.ts build",
     "build:shared": "npm run build --prefix shared",
+
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:services": "ts-node scripts/run-services.ts test",
+    
     "format": "prettier --write \"**/*.ts\"",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "create-service": "ts-node scripts/create-service.ts",

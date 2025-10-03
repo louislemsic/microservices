@@ -31,13 +31,15 @@ async function bootstrap() {
   const serviceVersion = packageJson.version;  
   
   // Registry URL
-  const registryUrl = `http://${host}:${configService.get<string>('REGISTRY_PORT', "3001")}`;
+  const registryUrl = `http://${configService.get<string>('GATEWAY_HOST', 'localhost')}:${configService.get<string>('REGISTRY_PORT', "3001")}`;
   const regKey = configService.get<string>('REGISTRY_KEY');
 
   app.setGlobalPrefix(serviceName);
 
   await app.listen(port);
   logger.log(`🚀 User service is running on: http://${host}:${port}/${serviceName}/${apiVersion}`);
+
+  logger.log(`🔄 Attempting to register to gateway at ${registryUrl} with key ${regKey ? `${regKey.slice(0, 8)}...${regKey.slice(-4)}` : 'undefined'}`);
 
   // Register with gateway
   try {

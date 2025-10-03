@@ -11,75 +11,81 @@ const SHARED_DIR = join(ROOT_DIR, 'shared');
 const GATEWAY_HEALTH_URL = 'http://localhost:3000/health';
 const SERVICE_START_DELAY = 500; // ms between service starts
 
+interface CommandConfig {
+  command: string;
+  services: string[];
+}
+
 /**
  * Enhanced development script for Atlas microservices
  * Supports selective service startup with argument parsing and validation
  */
 async function main() {
   try {
-    const command = parseCommand();
-    const requestedServices = parseServiceArguments();
+    let { command, services }: CommandConfig = parseCommand();
+
+    // Discover the services
     const availableServices = discoverServices();
+
+    // Validate the services
+    validateServices(services, availableServices);
+
+    // Build, install dependencies, and start services
+    let processes: ChildProcess[] = [];
     
-    console.log('🚀 Starting Atlas Development Environment\n');
-    
-    // Validate requested services
-    validateServices(requestedServices, availableServices);
-    
-    // Determine which services to start and install/build dependencies only for those
-    const servicesToStart = requestedServices.length > 0 
-      ? requestedServices 
-      : availableServices.filter(name => name !== 'gateway');
-    
-    // Always include gateway and shared in dependency installation and building
-    const servicesToInstall = ['gateway', 'shared', ...servicesToStart];
-    const servicesToBuild = ['gateway', 'shared', ...servicesToStart];
-    
-    // Install dependencies for selected services
-    await installServiceDependencies(servicesToInstall);
-    
-    // Build selected services
-    await buildServices(servicesToBuild);
-    
-    // Start services
-    const processes = await startServices(requestedServices, command);
+    switch (command) {
+      case 'start:prod':
+        processes = await startServices(services, command);
+        break;
+
+      case 'start:dev':
+        // Set all services if no services are specified
+        if (services.length === 0) {
+          services = availableServices;
+        }
+
+        await installServiceDependencies(['shared', ...services]);
+        await buildServices(['shared', ...services]);
+        processes = await startServices(['gateway', ...services], command);
+        break;
+
+      case 'build':
+        // Set all services if no services are specified
+        if (services.length === 0) {
+          services = availableServices;
+        }
+        
+        await buildServices(['shared', ...services]);
+        break;
+    }
     
     // Setup graceful shutdown
     setupGracefulShutdown(processes);
     
     console.log('\n🎉 All services started! Press Ctrl+C to stop all services.\n');
-    
+
   } catch (error) {
-    console.error('💥 Failed to start development environment:', error);
+    console.error('💥 Failed to execute command:', error);
     process.exit(1);
   }
 }
 
 /**
  * Parses the command from process arguments
- * @returns The command to run (start:dev, start:prod, build, test)
+ * @returns The command and optional service name
  */
-function parseCommand(): string {
+function parseCommand(): CommandConfig {
   const args = process.argv.slice(2);
-  const command = args.find(arg => 
-    ['start:dev', 'start:prod', 'build', 'test'].includes(arg)
-  );
-  
+
+  // First argument should be the command
+  const command = args[0];
   if (!command) {
-    console.error('❌ No valid command provided. Available commands: start:dev, start:prod, build, test');
+    console.error('❌ No command provided');
+    showUsage();
     process.exit(1);
   }
-  
-  return command;
-}
 
-/**
- * Parses service arguments from command line
- * Deduplicates and sorts services alphabetically
- * @returns Array of unique service names
- */
-function parseServiceArguments(): string[] {
-  const args = process.argv.slice(2);
+  // Get the services
   const serviceArgs = args.filter(arg => 
     !arg.startsWith('--') && 
     !['start:dev', 'start:prod', 'build', 'test'].includes(arg)
@@ -89,7 +95,21 @@ function parseServiceArguments(): string[] {
   const uniqueServices = [...new Set(serviceArgs)].sort();
   
   // If no services specified, return empty array (will start all)
-  return uniqueServices;
+  return { command, services: uniqueServices };
+}
+
+function showUsage() {
+  console.log(`
+Usage:
+  npm run dev                    - Install dependencies, build all services, and start in development mode
+  npm run start <service-name>   - Start a specific service in production mode
+  npm run build <service-name>   - Build a specific service (and shared library)
+
+Examples:
+  npm run dev
+  npm run start gateway
+  npm run build auth
+`);
 }
 
 /**
@@ -185,35 +205,65 @@ async function installServiceDependencies(services: string[]): Promise<void> {
  * @returns Array of started processes
  */
 async function startServices(requestedServices: string[], command: string): Promise<ChildProcess[]> {
+  if (requestedServices.length === 0) {
+    console.error('❌ No services to start. Prod commands require at least one service to be specified.');
+    process.exit(1);
+  }
+
+    /**
+   * Waits for the gateway to be ready
+   * @param maxRetries - Maximum number of retry attempts
+   * @param retryInterval - Interval between retries in ms
+   */
+  async function waitForGateway(maxRetries = 30, retryInterval = 1000): Promise<void> {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const req = http.get(GATEWAY_HEALTH_URL, (res) => {
+            if (res.statusCode === 200) {
+              resolve();
+            } else {
+              reject(new Error(`Gateway returned status ${res.statusCode}`));
+            }
+          });
+          
+          req.on('error', reject);
+          req.setTimeout(2000, () => {
+            req.destroy();
+            reject(new Error('Request timeout'));
+          });
+        });
+        
+        return; // Gateway is ready
+      } catch (error) {
+        if (i === maxRetries - 1) {
+          console.warn('⚠️  Gateway health check failed, but continuing anyway...');
+          return;
+        }
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, retryInterval));
+      }
+    }
+  }
+
   const processes: ChildProcess[] = [];
-  const availableServices = discoverServices();
-  
-  // Determine which services to start
-  const servicesToStart = requestedServices.length > 0 
-    ? requestedServices 
-    : availableServices.filter(name => name !== 'gateway');
-  
-  // Log what services will be started
-  if (servicesToStart.length > 0) {
-    console.log('Running the following services:');
-    console.log(`[${servicesToStart.join(', ')}]\n`);
-  } else {
-    console.log('📂 Found services:', availableServices.join(', '));
-    console.log('🔧 Starting all services...\n');
+
+  if (requestedServices.includes('gateway')) {
+    requestedServices = requestedServices.filter(service => service !== 'gateway');
+
+    // Always start gateway first
+    console.log('📡 Starting gateway...');
+    const gatewayProcess = startService('gateway', GATEWAY_DIR, command);
+    processes.push(gatewayProcess);
+
+    // Wait for gateway to be ready
+    console.log('⏳ Waiting for gateway to be ready...');
+    await waitForGateway();
+    console.log('✅ Gateway is ready!\n');
   }
   
-  // Always start gateway first
-  console.log('📡 Starting gateway...');
-  const gatewayProcess = startService('gateway', GATEWAY_DIR, command);
-  processes.push(gatewayProcess);
-  
-  // Wait for gateway to be ready
-  console.log('⏳ Waiting for gateway to be ready...');
-  await waitForGateway();
-  console.log('✅ Gateway is ready!\n');
-  
   // Start other services
-  for (const serviceName of servicesToStart) {
+  for (const serviceName of requestedServices) {
     console.log(`🔧 Starting ${serviceName} service...`);
     const servicePath = join(SERVICES_DIR, serviceName);
     const serviceProcess = startService(serviceName, servicePath, command);
@@ -280,42 +330,6 @@ function setupServiceLogging(process: ChildProcess, serviceName: string): void {
       }
     });
   });
-}
-
-/**
- * Waits for the gateway to be ready
- * @param maxRetries - Maximum number of retry attempts
- * @param retryInterval - Interval between retries in ms
- */
-async function waitForGateway(maxRetries = 30, retryInterval = 1000): Promise<void> {
-  for (let i = 0; i < maxRetries; i++) {
-    try {
-      await new Promise<void>((resolve, reject) => {
-        const req = http.get(GATEWAY_HEALTH_URL, (res) => {
-          if (res.statusCode === 200) {
-            resolve();
-          } else {
-            reject(new Error(`Gateway returned status ${res.statusCode}`));
-          }
-        });
-        
-        req.on('error', reject);
-        req.setTimeout(2000, () => {
-          req.destroy();
-          reject(new Error('Request timeout'));
-        });
-      });
-      
-      return; // Gateway is ready
-    } catch (error) {
-      if (i === maxRetries - 1) {
-        console.warn('⚠️  Gateway health check failed, but continuing anyway...');
-        return;
-      }
-      // Wait before retry
-      await new Promise(resolve => setTimeout(resolve, retryInterval));
-    }
-  }
 }
 
 /**

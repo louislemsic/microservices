@@ -1,0 +1,38 @@
+# Dependencies
+**/node_modules
+**/dist
+
+# Environment and secrets
+**/.env
+**/.env.*
+!**/.env.example
+
+# Development files
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+
+# Logs and debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+**/logs
+**/*.log
+
+# Test coverage
+.nyc_output
+**/coverage
+
+# Documentation
+*.md
+!README.md
+
+# Keep necessary files for gateway service
+!shared/
+!package*.json
+!tsconfig*.json
+!src/
+!Dockerfile
+!nest-cli.json

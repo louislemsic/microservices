@@ -5,8 +5,6 @@ import { {{ServiceName}}Module } from './{{service}}.module';
 import axios from 'axios';
 import * as packageJson from '../package.json';
 
-const MAX_REG_RETRIES = 3;
-
 // Convert semantic version to API version (e.g., "1.0.0" -> "v1", "2.1.0" -> "v2")
 function getApiVersion(semanticVersion: string): string {
   const majorVersion = semanticVersion.split('.')[0];
@@ -24,7 +22,7 @@ async function bootstrap() {
   
   const configService = app.get(ConfigService);
 
-  const host = configService.get<String>('HOST', '{{SERVICE_HOSTNAME}}');
+  const host = configService.get<string>('HOST', '{{SERVICE_HOSTNAME}}');
   const port = configService.get<number>('PORT', {{SERVICE_PORT}});
   
   // Extract service info from package.json
@@ -33,7 +31,7 @@ async function bootstrap() {
   const serviceVersion = packageJson.version;  
   
   // Registry URL
-  const registryUrl = `http://${configService.get<String>('GATEWAY_HOST', 'localhost')}:${configService.get<number>('REGISTRY_PORT', 3001)}`;
+  const registryUrl = `http://${configService.get<string>('GATEWAY_HOST', 'localhost')}:${configService.get<string>('REGISTRY_PORT', "3001")}`;
   const regKey = configService.get<string>('REGISTRY_KEY');
 
   app.setGlobalPrefix(serviceName);
@@ -45,10 +43,10 @@ async function bootstrap() {
 
   // Register with gateway
   try {
-    await registerWithGatewayWithRetry();
+    await registerWithGateway();
     logger.log(`✅ Successfully registered with gateway at ${registryUrl}`);
   } catch (error) {
-    logger.error(`❌ Failed to register with gateway after ${MAX_REG_RETRIES} attempts: ${error.message}`);
+    logger.error(`❌ Failed to register with gateway: ${error.message}`);
     logger.warn('Service will continue running but may not be accessible through gateway');
   }
 
@@ -68,7 +66,7 @@ async function bootstrap() {
   process.on('SIGTERM', shutdown);
   process.on('SIGINT', shutdown);
 
-  async function registerWithGatewayWithRetry() {
+  async function registerWithGateway() {
     if (!regKey) {
       throw new Error('REGISTRY_KEY environment variable is required for service registration');
     }
@@ -88,34 +86,13 @@ async function bootstrap() {
       },
     };
 
-    const url = `${registryUrl}/registry/register`;
-    
-    for (let attempt = 1; attempt <= MAX_REG_RETRIES; attempt++) {
-      try {
-        logger.log(`Registering to gateway at ${url} as ${host}:${port} (attempt ${attempt}/${MAX_REG_RETRIES})`);
-        
-        await axios.post(url, registration, {
-          headers: {
-            'x-registry-key': regKey,
-            'Content-Type': 'application/json',
-          },
-          timeout: 5000,
-        });
-        
-        return; // Success, exit retry loop
-      } catch (error) {
-        logger.warn(`Registration attempt ${attempt}/${MAX_REG_RETRIES} failed: ${error.message}`);
-        
-        if (attempt === MAX_REG_RETRIES) {
-          throw error; // Re-throw on final attempt
-        }
-        
-        // Wait 2-3 seconds before retry
-        const delay = 2000 + Math.random() * 1000; // 2000-3000ms
-        logger.log(`Retrying in ${Math.round(delay)}ms...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-      }
-    }
+    await axios.post(`${registryUrl}/registry/register`, registration, {
+      headers: {
+        'x-registry-key': regKey,
+        'Content-Type': 'application/json',
+      },
+      timeout: 5000,
+    });
   }
 
   async function deregisterFromGateway() {
