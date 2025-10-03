@@ -2,10 +2,20 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
+    "rootDir": "./",
     "baseUrl": "./",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
+    "target": "ES2020",
+    "useDefineForClassFields": false,
+    "paths": {
+      "@atlas/shared": ["../../shared"]
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test"
+  ]
 }
