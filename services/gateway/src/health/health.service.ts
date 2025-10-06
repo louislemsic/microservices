@@ -196,7 +196,7 @@ export class HealthService {
       const serviceHealth = await Promise.allSettled(
         services.map(async (service) => {
           try {
-            const healthUrl = `http://localhost:${service.port}${service.healthEndpoint}`;
+            const healthUrl = `http://${service.host}:${service.port}${service.healthEndpoint}`;
             const startTime = Date.now();
 
             await this.http.pingCheck(`${service.name}_check`, healthUrl);

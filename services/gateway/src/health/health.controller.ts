@@ -11,7 +11,6 @@ export class HealthController {
   ) {}
 
   @Get()
-  @Get('ping')
   async check(): Promise<SimpleHealthResponse> {
     return this.healthService.getSimpleHealth();
   }
