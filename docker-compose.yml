@@ -64,21 +64,6 @@ services:
       - atlas-network
 
   # Microservices - start after gateway
-  auth-service:
-    build:
-      context: .
-      dockerfile: ./services/auth/Dockerfile
-    ports:
-      - "8001:8001"
-    env_file:
-      - ./services/auth/.env
-    depends_on:
-      gateway:
-        condition: service_healthy
-    restart: unless-stopped
-    networks:
-      - atlas-network
-
   user-service:
     build:
       context: .
