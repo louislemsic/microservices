@@ -22,7 +22,7 @@ async function bootstrap() {
   
   const configService = app.get(ConfigService);
 
-  const host = configService.get<string>('HOST', '{{SERVICE_HOSTNAME}}');
+  const host = configService.get<string>('HOSTNAME', '{{SERVICE_HOSTNAME}}');
   const port = configService.get<number>('PORT', {{SERVICE_PORT}});
   
   // Extract service info from package.json
@@ -31,7 +31,7 @@ async function bootstrap() {
   const serviceVersion = packageJson.version;  
   
   // Registry URL
-  const registryUrl = `http://${configService.get<string>('GATEWAY_HOST', 'localhost')}:${configService.get<string>('REGISTRY_PORT', "3001")}`;
+  const registryUrl = `http://${configService.get<string>('GATEWAY_HOSTNAME', 'localhost')}:${configService.get<string>('REGISTRY_PORT', "3001")}`;
   const regKey = configService.get<string>('REGISTRY_KEY');
 
   app.setGlobalPrefix(serviceName);
