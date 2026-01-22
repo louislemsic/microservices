@@ -103,7 +103,7 @@ GATEWAY_PORT=${gatewayEnv.GATEWAY_PORT || '3000'}
 
 # Registry Configuration
 REGISTRY_PORT=${gatewayEnv.REGISTRY_PORT || REGISTRY_PORT}
-REG_KEY=${gatewayEnv.REG_KEY || REG_KEY}
+REGISTRY_KEY=${gatewayEnv.REGISTRY_KEY || REG_KEY}
 
 # Service-specific Configuration
 ${serviceSpecificVars}`;

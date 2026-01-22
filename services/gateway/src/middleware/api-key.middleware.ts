@@ -19,7 +19,7 @@ export class ApiKeyMiddleware implements NestMiddleware {
     const apiKey = req.header('x-api-key');
 
     // Check if auth service is available in the dynamic registry
-    const authService = registryStore.getService(Services.AUTH);
+    const authService = registryStore.getService(Services?.AUTH ?? 'auth');
 
     if (!authService) {
       this.logger.warn('Auth service is not registered or offline - allowing request to pass through');
